@@ -115,15 +115,15 @@
       const lines = inputText.split("\n");
       let output = "";
       let questionNumber = 1;
+      let collectingAnswers = false;
 
       const normalizeAnswer = (line) => {
-        const match = line.match(/^(\*\*)?([a-dA-D])[\.\,\)\s]/);
+        const match = line.match(/^(\*\*)?([a-dA-D])[\.\,\)]\s*/);
         if (match) {
-          let prefix = match[1] ? "**" : "";
-          let letter = match[2].toLowerCase();
-          let content = line.replace(/^(\*\*)?[a-dA-D][\.\,\)\s]+/, "").trim();
-          let result = `${prefix}${letter}) ${content}`;
-          return match[1] ? result + "**" : result;
+          const isCorrect = match[1] ? "**" : "";
+          const letter = match[2].toLowerCase();
+          const content = line.replace(/^(\*\*)?[a-dA-D][\.\,\)]\s*/, "").trim();
+          return `${isCorrect}${letter}) ${content}${isCorrect}`;
         }
         return line.trim();
       };
@@ -131,20 +131,26 @@
       lines.forEach(line => {
         let trimmed = line.trim();
 
-        if (/^\d+[\.,\)]/.test(trimmed) || /^\d+\s/.test(trimmed)) {
-          let content = trimmed.replace(/^\d+[\.,\)\s]*/, "");
-          output += `${questionNumber}. ${content}\n`;
+        // Nhận diện câu hỏi theo nhiều định dạng: "Câu 1", "1.", "1)", "Câu 1:"...
+        if (/^(Câu\s*\d+[\s:.\)]*|\d+[\s:.\)]*)/i.test(trimmed)) {
+          const questionText = trimmed
+            .replace(/^Câu\s*\d+[\s:.\)]*/i, "")
+            .replace(/^\d+[\s:.\)]*/, "")
+            .trim();
+          output += `${questionNumber}. ${questionText}\n`;
           questionNumber++;
-        } else if (/^(\*\*)?[a-dA-D][\.\,\)\s]/.test(trimmed)) {
+          collectingAnswers = true;
+        } else if (collectingAnswers && /^(\*\*)?[A-D][\.\,\)]\s*/.test(trimmed)) {
           output += normalizeAnswer(trimmed) + "\n";
+        } else if (trimmed === "") {
+          output += "\n";
+          collectingAnswers = false;
         } else {
           output += trimmed + "\n";
         }
       });
 
       document.getElementById("output").textContent = output.trim();
-
-      // Ẩn/hiện placeholder thủ công (phòng trường hợp HTML không cập nhật đúng)
       document.querySelector(".placeholder").style.opacity = output.trim() ? "0" : "1";
     }
 
