@@ -142,7 +142,9 @@
     <div id="quizContainer" class="question-block">
       <div id="questionText"></div>
       <div id="optionsContainer"></div>
+      <button onclick="prevQuestion()">⬅️ Quay lại</button>
       <button onclick="nextQuestion()">➡️ Tiếp</button>
+
     </div>
 
     <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">0 / 0 câu đã làm</div>
@@ -392,6 +394,16 @@
       document.getElementById("popup").style.display = "none";
       document.getElementById("overlay").style.display = "none";
     }
+    function prevQuestion() {
+  if (current === 0) {
+    showPopup("Bạn đang ở câu đầu tiên.");
+    return;
+  }
+  current--;
+  userAnswers.pop(); // Xoá đáp án trước đó
+  showQuestion();
+}
+
   </script>
 </body>
 </html>
