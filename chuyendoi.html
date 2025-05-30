@@ -41,10 +41,28 @@
       margin-bottom: 20px;
     }
 
+    .output-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
     pre {
       background: #f1f1f1;
       white-space: pre-wrap;
       min-height: 200px;
+    }
+
+    .placeholder {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      color: #aaa;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    pre:not(:empty) + .placeholder {
+      opacity: 0;
     }
 
     .buttons {
@@ -77,7 +95,6 @@
 </head>
 <body>
   <h2>📌 Chuyển định dạng câu hỏi trắc nghiệm</h2>
-<!--  <p>👉 Dán văn bản đầu vào tại đây:</p> -->
   <textarea id="input" placeholder="Dán nội dung ở đây..."></textarea>
 
   <div class="buttons">
@@ -87,8 +104,10 @@
     <button onclick="window.location.href='index.html'">⬅️ Quay về trang chính</button>
   </div>
 
- <!-- <h3>Kết quả:</h3> -->
-  <pre id="output"></pre>
+  <div class="output-wrapper">
+    <pre id="output"></pre>
+    <div class="placeholder">Kết quả</div>
+  </div>
 
   <script>
     function convert() {
@@ -124,6 +143,9 @@
       });
 
       document.getElementById("output").textContent = output.trim();
+
+      // Ẩn/hiện placeholder thủ công (phòng trường hợp HTML không cập nhật đúng)
+      document.querySelector(".placeholder").style.opacity = output.trim() ? "0" : "1";
     }
 
     function copyOutput() {
@@ -144,6 +166,7 @@
     function clearAll() {
       document.getElementById("input").value = "";
       document.getElementById("output").textContent = "";
+      document.querySelector(".placeholder").style.opacity = "1";
     }
   </script>
 </body>
