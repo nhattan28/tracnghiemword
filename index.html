@@ -148,13 +148,13 @@
       <div id="optionsContainer"></div>
       <button onclick="prevQuestion()">⬅️ Quay lại</button>
       <button onclick="nextQuestion()">➡️ Tiếp</button>
-
     </div>
 
     <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">0 / 0 câu đã làm</div>
     <div class="result" id="result"></div>
     <div style="text-align:center;">
       <button onclick="confirmRestart()">🔄 Làm lại</button>
+      <button id="clearFileBtn" style="display:none;" onclick="clearFile()">🗑️ Xóa file</button>
     </div>
   </div>
 
@@ -187,6 +187,7 @@
           parseQuestions(html);
           if (rawQuestions.length > 0) {
             document.getElementById("startQuiz").style.display = "block";
+            document.getElementById("clearFileBtn").style.display = "inline-block"; // Hiển thị nút xóa file
             showPopup("Nhấn 'Bắt đầu' để làm bài! Không được chuyển tab, chuyển ứng dụng hoặc thu nhỏ trình duyệt. Mỗi câu hỏi bắt buộc phải chọn đáp án mới được tiếp tục.");
           } else {
             showPopup("⚠️ Không tìm thấy câu hỏi hợp lệ.");
@@ -198,53 +199,52 @@
       if (event.target.files.length > 0) reader.readAsArrayBuffer(event.target.files[0]);
     });
 
-function parseQuestions(html) {
-  const container = document.createElement("div");
-  container.innerHTML = html;
-  const paras = container.querySelectorAll("p");
-  rawQuestions = [];
-  let currentQ = null;
+    function parseQuestions(html) {
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      const paras = container.querySelectorAll("p");
+      rawQuestions = [];
+      let currentQ = null;
 
-  function isRedOrBold(p) {
-    let hasRed = false;
-    let hasBold = false;
+      function isRedOrBold(p) {
+        let hasRed = false;
+        let hasBold = false;
 
-    // Kiểm tra các phần tử con
-    p.querySelectorAll("*").forEach(el => {
-      const style = el.getAttribute("style") || "";
-      const colorRed = /color:\s*(red|#ff0000)/i.test(style);
-      const tagBold = el.tagName === "B" || el.tagName === "STRONG";
+        // Kiểm tra các phần tử con
+        p.querySelectorAll("*").forEach(el => {
+          const style = el.getAttribute("style") || "";
+          const colorRed = /color:\s*(red|#ff0000)/i.test(style);
+          const tagBold = el.tagName === "B" || el.tagName === "STRONG";
 
-      if (colorRed) hasRed = true;
-      if (tagBold) hasBold = true;
-    });
+          if (colorRed) hasRed = true;
+          if (tagBold) hasBold = true;
+        });
 
-    return hasRed || hasBold;
-  }
+        return hasRed || hasBold;
+      }
 
-  paras.forEach(p => {
-    const text = p.innerText.trim();
+      paras.forEach(p => {
+        const text = p.innerText.trim();
 
-    // Nhận diện câu hỏi (1., 2), 3) ...)
-    if (/^\d+[\.\)]\s/.test(text)) {
+        // Nhận diện câu hỏi (1., 2), 3) ...)
+        if (/^\d+[\.\)]\s/.test(text)) {
+          if (currentQ) rawQuestions.push(currentQ);
+          currentQ = { question: text, options: [], correctIndex: null };
+        }
+
+        // Nhận diện đáp án (a., a), A., A))
+        else if (/^[a-dA-D][\.\)]\s/.test(text) && currentQ) {
+          const label = text.substring(0, 2); // a. hoặc a) hoặc A.
+          const content = text.substring(2).trim(); // nội dung sau "a. "
+          const full = label + " " + content;
+
+          const isCorrect = isRedOrBold(p);
+          currentQ.options.push({ text: full, isCorrect });
+        }
+      });
+
       if (currentQ) rawQuestions.push(currentQ);
-      currentQ = { question: text, options: [], correctIndex: null };
     }
-
-    // Nhận diện đáp án (a., a), A., A))
-    else if (/^[a-dA-D][\.\)]\s/.test(text) && currentQ) {
-      const label = text.substring(0, 2); // a. hoặc a) hoặc A.
-      const content = text.substring(2).trim(); // nội dung sau "a. "
-      const full = label + " " + content;
-
-      const isCorrect = isRedOrBold(p);
-      currentQ.options.push({ text: full, isCorrect });
-    }
-  });
-
-  if (currentQ) rawQuestions.push(currentQ);
-}
-
 
     function startQuiz() {
       quizStarted = true;
@@ -421,16 +421,31 @@ function parseQuestions(html) {
       document.getElementById("popup").style.display = "none";
       document.getElementById("overlay").style.display = "none";
     }
-    function prevQuestion() {
-  if (current === 0) {
-    showPopup("Bạn đang ở câu đầu tiên.");
-    return;
-  }
-  current--;
-  userAnswers.pop(); // Xoá đáp án trước đó
-  showQuestion();
-}
 
+    function prevQuestion() {
+      if (current === 0) {
+        showPopup("Bạn đang ở câu đầu tiên.");
+        return;
+      }
+      current--;
+      userAnswers.pop(); // Xoá đáp án trước đó
+      showQuestion();
+    }
+
+    // Hàm xóa file
+    function clearFile() {
+      const fileInput = document.getElementById("upload");
+      fileInput.value = ''; // Xóa file đã chọn
+      document.getElementById("startQuiz").style.display = "none"; // Ẩn nút "Bắt đầu"
+      document.getElementById("quizContainer").style.display = "none"; // Ẩn khung câu hỏi
+      document.getElementById("result").innerHTML = ""; // Xóa kết quả
+      document.getElementById("progressBar").textContent = "0 / 0 câu đã làm"; // Reset tiến độ
+      document.getElementById("clearFileBtn").style.display = "none"; // Ẩn nút "Xóa file"
+      rawQuestions = []; // Xóa danh sách câu hỏi
+      userAnswers = []; // Xóa đáp án người dùng
+      current = 0; // Reset chỉ số câu hỏi
+      stopTimer(); // Dừng timer
+    }
   </script>
 </body>
 </html>
