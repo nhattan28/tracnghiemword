@@ -2,23 +2,35 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trắc nghiệm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trắc nghiệm Lung Linh</title>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f9fbfd;
+    background: linear-gradient(135deg, #a8edea, #fed6e3);
+
+      background-size: 400% 400%;
+      animation: gradientFlow 15s ease infinite;
       color: #333;
-      line-height: 1.6;
+    }
+
+    @keyframes gradientFlow {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
     .container {
       max-width: 800px;
       margin: auto;
       padding: 20px;
+      background-color: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
 
     h2 {
@@ -33,85 +45,80 @@
       margin-bottom: 20px;
     }
 
-    input[type="file"] {
-      margin-top: 10px;
+    .question-block {
+      display: none;
+      border-radius: 12px;
+      background: linear-gradient(-45deg, #ffecd2, #fcb69f, #ff9a9e, #fad0c4);
+      background-size: 400% 400%;
+      animation: glow 10s ease infinite;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    @keyframes glow {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
     button {
-      background-color: #3498db;
+      background-color: #ff7675;
       color: white;
       padding: 10px 20px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 16px;
       cursor: pointer;
-      margin-top: 20px;
     }
 
     button:hover {
-      background-color: #2980b9;
-    }
-
-    .question-block {
-      display: none;
-      background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-top: 20px;
+      background-color: #d63031;
     }
 
     #optionsContainer label {
       display: block;
-      margin-bottom: 12px;
-      padding: 8px;
-      background-color: #f1f5f9;
-      border-radius: 5px;
+      margin-bottom: 10px;
+      background: #ffffffaa;
+      padding: 10px;
+      border-radius: 8px;
       cursor: pointer;
+      border: 1px solid #ccc;
     }
 
-    #optionsContainer input[type="radio"] {
-      margin-right: 10px;
+    input[type="file"] {
+      margin: 10px 0;
     }
 
     .result {
       margin-top: 30px;
-      background: #eef6f8;
+      background: #dff9fb;
       padding: 20px;
-      border-left: 5px solid #3498db;
-      border-radius: 8px;
+      border-radius: 10px;
+      border-left: 5px solid #00cec9;
     }
 
-    .wrong {
-      color: #e74c3c;
-    }
+    .correct { color: #27ae60; }
+    .wrong { color: #e74c3c; }
 
-    .correct {
-      color: #27ae60;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-
-      button {
-        width: 100%;
-      }
+    canvas#confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
+  <canvas id="confetti"></canvas>
   <div class="container">
-    <h2>Trắc nghiệm từ file WORL</h2>
-
-    <div class="note">
-      📌 <strong>Lưu ý:</strong> Đáp án đúng phải được <strong>in đậm</strong>  trong file Word để hệ thống nhận diện.
-    </div>
-
+    <h2>🌟 Trắc nghiệm Lung Linh 🌟</h2>
+    <div class="note">📌 <strong>Lưu ý:</strong> Đáp án đúng cần in <strong>đậm</strong> trong file Word.</div>
     <input type="file" id="upload" accept=".docx" />
     <div id="startQuiz" style="display:none;">
-      <button onclick="startQuiz()">🎯 Bắt đầu làm bài</button>
+      <button onclick="startQuiz()">🎯 Bắt đầu</button>
     </div>
 
     <div id="quizContainer" class="question-block">
@@ -120,21 +127,27 @@
       <button onclick="nextQuestion()">➡️ Tiếp</button>
     </div>
 
-    <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">
-      0 / 0 câu đã làm
-    </div>
-
+    <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">0 / 0 câu đã làm</div>
     <div class="result" id="result"></div>
-
-    <div style="margin-top: 20px; text-align:center;">
-      <button onclick="restartQuiz()">🔄 Làm lại bài</button>
+    <div style="text-align:center;">
+      <button onclick="restartQuiz()">🔄 Làm lại</button>
     </div>
   </div>
 
   <script>
+    const encouragements = [
+      "Đừng nản, bạn đang làm rất tốt! 💪",
+      "Thử lại nhé, bạn sẽ làm được! 🌟",
+      "Mỗi lần sai là một lần học! 📘",
+      "Bạn đang tiến bộ đấy! 🚀",
+      "Giữ vững tinh thần nhé! 💖"
+    ];
+
     let rawQuestions = [];
     let current = 0;
     let userAnswers = [];
+
+    const confetti = new ConfettiGenerator({ target: 'confetti' });
 
     document.getElementById("upload").addEventListener("change", function (event) {
       const reader = new FileReader();
@@ -152,7 +165,6 @@
       const container = document.createElement("div");
       container.innerHTML = html;
       const paras = container.querySelectorAll("p");
-
       rawQuestions = [];
       let currentQ = null;
 
@@ -198,9 +210,7 @@
 
       q.options.forEach((opt, idx) => {
         optContainer.innerHTML += `
-          <label>
-            <input type="radio" name="option" value="${idx}"> ${opt.text}
-          </label>`;
+          <label><input type="radio" name="option" value="${idx}"> ${opt.text}</label>`;
       });
 
       updateProgress();
@@ -254,15 +264,18 @@
         <p>Sai: ${wrongList.length}</p>`;
 
       if (wrongList.length > 0) {
+        html += `<p style="color:#e17055;">💌 ${encouragements[Math.floor(Math.random()*encouragements.length)]}</p>`;
         html += `<h4>Câu sai:</h4><ul>`;
         wrongList.forEach(w => {
-          html += `<li>
-            <strong>${w.question}</strong><br>
+          html += `<li><strong>${w.question}</strong><br>
             Bạn chọn: <span class="wrong">${w.yourAnswer}</span><br>
-            Đáp án đúng: <span class="correct">${w.correctAnswer}</span>
-          </li>`;
+            Đáp án đúng: <span class="correct">${w.correctAnswer}</span></li>`;
         });
         html += `</ul>`;
+      } else {
+        html += `<p>🎉 Xuất sắc! Bạn đã trả lời đúng tất cả câu hỏi!</p>`;
+        confetti.render();
+        setTimeout(() => confetti.clear(), 5000);
       }
 
       document.getElementById("result").innerHTML = html;
@@ -270,7 +283,7 @@
     }
 
     function restartQuiz() {
-      if (confirm("Bạn có chắc chắn muốn làm lại bài?")) {
+      if (confirm("Bạn có chắc muốn làm lại bài?")) {
         document.getElementById("result").innerHTML = "";
         document.getElementById("quizContainer").style.display = "block";
         shuffleArray(rawQuestions);
