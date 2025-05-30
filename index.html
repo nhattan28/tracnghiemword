@@ -132,7 +132,11 @@
   <canvas id="confetti"></canvas>
   <div class="container">
     <h2>🌟 Trắc nghiệm🌟</h2>
-    <div class="note">📌 <strong>Lưu ý:</strong> Đáp án đúng cần in <strong>đậm</strong> trong file Word.</div>
+    <div class="note">
+      📌 <strong>Lưu ý:</strong> Đáp án đúng cần in <strong>đậm</strong> trong file Word.<br>
+      Định dạng câu hỏi: <code>1.</code> & <code>1)</code><br>
+      Định dạng câu trả lời: <code>a.</code> & <code>a)</code> & <code>A.</code> & <code>A)</code>
+    </div>
     <input type="file" id="upload" accept=".docx" />
     <div id="startQuiz" style="display:none; text-align:center; margin-top:10px;">
       <button onclick="startQuiz()">🎯 Bắt đầu</button>
@@ -194,30 +198,53 @@
       if (event.target.files.length > 0) reader.readAsArrayBuffer(event.target.files[0]);
     });
 
-    function parseQuestions(html) {
-      const container = document.createElement("div");
-      container.innerHTML = html;
-      const paras = container.querySelectorAll("p");
-      rawQuestions = [];
-      let currentQ = null;
+function parseQuestions(html) {
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  const paras = container.querySelectorAll("p");
+  rawQuestions = [];
+  let currentQ = null;
 
-      paras.forEach(p => {
-        const text = p.innerText.trim();
-        const isBold = p.querySelector("strong");
-        const isYellow = p.innerHTML.includes("highlight") || p.innerHTML.includes("background-color:#ffff00");
-        if (/^\d+\./.test(text)) {
-          if (currentQ) rawQuestions.push(currentQ);
-          currentQ = { question: text, options: [], correctIndex: null };
-        } else if (/^[a-dA-D][).]/.test(text) && currentQ) {
-          const label = text.substring(0, 2);
-          const content = text.substring(2).trim();
-          const full = label + " " + content;
-          const idx = currentQ.options.length;
-          currentQ.options.push({ text: full, isCorrect: (isBold || isYellow) });
-        }
-      });
+  function isRedOrBold(p) {
+    let hasRed = false;
+    let hasBold = false;
+
+    // Kiểm tra các phần tử con
+    p.querySelectorAll("*").forEach(el => {
+      const style = el.getAttribute("style") || "";
+      const colorRed = /color:\s*(red|#ff0000)/i.test(style);
+      const tagBold = el.tagName === "B" || el.tagName === "STRONG";
+
+      if (colorRed) hasRed = true;
+      if (tagBold) hasBold = true;
+    });
+
+    return hasRed || hasBold;
+  }
+
+  paras.forEach(p => {
+    const text = p.innerText.trim();
+
+    // Nhận diện câu hỏi (1., 2), 3) ...)
+    if (/^\d+[\.\)]\s/.test(text)) {
       if (currentQ) rawQuestions.push(currentQ);
+      currentQ = { question: text, options: [], correctIndex: null };
     }
+
+    // Nhận diện đáp án (a., a), A., A))
+    else if (/^[a-dA-D][\.\)]\s/.test(text) && currentQ) {
+      const label = text.substring(0, 2); // a. hoặc a) hoặc A.
+      const content = text.substring(2).trim(); // nội dung sau "a. "
+      const full = label + " " + content;
+
+      const isCorrect = isRedOrBold(p);
+      currentQ.options.push({ text: full, isCorrect });
+    }
+  });
+
+  if (currentQ) rawQuestions.push(currentQ);
+}
+
 
     function startQuiz() {
       quizStarted = true;
