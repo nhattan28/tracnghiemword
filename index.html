@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trắc nghiệm</title>
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fbfd;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .note {
+      background-color: #fff8c6;
+      padding: 10px;
+      border-left: 4px solid #f1c40f;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .question-block {
+      display: none;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    #optionsContainer label {
+      display: block;
+      margin-bottom: 12px;
+      padding: 8px;
+      background-color: #f1f5f9;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #optionsContainer input[type="radio"] {
+      margin-right: 10px;
+    }
+
+    .result {
+      margin-top: 30px;
+      background: #eef6f8;
+      padding: 20px;
+      border-left: 5px solid #3498db;
+      border-radius: 8px;
+    }
+
+    .wrong {
+      color: #e74c3c;
+    }
+
+    .correct {
+      color: #27ae60;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Trắc nghiệm từ file WORL</h2>
+
+    <div class="note">
+      📌 <strong>Lưu ý:</strong> Đáp án đúng phải được <strong>in đậm</strong>  trong file Word để hệ thống nhận diện.
+    </div>
+
+    <input type="file" id="upload" accept=".docx" />
+    <div id="startQuiz" style="display:none;">
+      <button onclick="startQuiz()">🎯 Bắt đầu làm bài</button>
+    </div>
+
+    <div id="quizContainer" class="question-block">
+      <div id="questionText"></div>
+      <div id="optionsContainer"></div>
+      <button onclick="nextQuestion()">➡️ Tiếp</button>
+    </div>
+
+    <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">
+      0 / 0 câu đã làm
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <div style="margin-top: 20px; text-align:center;">
+      <button onclick="restartQuiz()">🔄 Làm lại bài</button>
+    </div>
+  </div>
+
+  <script>
+    let rawQuestions = [];
+    let current = 0;
+    let userAnswers = [];
+
+    document.getElementById("upload").addEventListener("change", function (event) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        mammoth.convertToHtml({ arrayBuffer: reader.result }).then(function (result) {
+          const html = result.value;
+          parseQuestions(html);
+          document.getElementById("startQuiz").style.display = "block";
+        });
+      };
+      reader.readAsArrayBuffer(event.target.files[0]);
+    });
+
+    function parseQuestions(html) {
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      const paras = container.querySelectorAll("p");
+
+      rawQuestions = [];
+      let currentQ = null;
+
+      paras.forEach(p => {
+        const text = p.innerText.trim();
+        const isBold = p.querySelector("strong");
+        const isYellow = p.innerHTML.includes("highlight") || p.innerHTML.includes("background-color:#ffff00");
+
+        if (/^\d+\./.test(text)) {
+          if (currentQ) rawQuestions.push(currentQ);
+          currentQ = { question: text, options: [], correctIndex: null };
+        } else if (/^[a-dA-D][).]/.test(text) && currentQ) {
+          const label = text.substring(0, 2);
+          const content = text.substring(2).trim();
+          const full = label + " " + content;
+          const idx = currentQ.options.length;
+          currentQ.options.push({ text: full, isCorrect: (isBold || isYellow) });
+        }
+      });
+
+      if (currentQ) rawQuestions.push(currentQ);
+    }
+
+    function startQuiz() {
+      shuffleArray(rawQuestions);
+      rawQuestions.forEach(q => {
+        shuffleArray(q.options);
+        q.correctIndex = q.options.findIndex(opt => opt.isCorrect);
+      });
+
+      document.getElementById("startQuiz").style.display = "none";
+      document.getElementById("quizContainer").style.display = "block";
+      userAnswers = [];
+      current = 0;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = rawQuestions[current];
+      document.getElementById("questionText").innerHTML = `<h3>${q.question}</h3>`;
+      const optContainer = document.getElementById("optionsContainer");
+      optContainer.innerHTML = "";
+
+      q.options.forEach((opt, idx) => {
+        optContainer.innerHTML += `
+          <label>
+            <input type="radio" name="option" value="${idx}"> ${opt.text}
+          </label>`;
+      });
+
+      updateProgress();
+    }
+
+    function nextQuestion() {
+      const selected = document.querySelector('input[name="option"]:checked');
+      if (!selected) {
+        alert("Bạn phải chọn một đáp án.");
+        return;
+      }
+
+      userAnswers.push(parseInt(selected.value));
+      current++;
+
+      if (current < rawQuestions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function updateProgress() {
+      const done = current;
+      const total = rawQuestions.length;
+      document.getElementById("progressBar").textContent = `${done} / ${total} câu đã làm`;
+    }
+
+    function showResult() {
+      document.getElementById("quizContainer").style.display = "none";
+      const total = rawQuestions.length;
+      let correct = 0;
+      let wrongList = [];
+
+      rawQuestions.forEach((q, i) => {
+        if (userAnswers[i] === q.correctIndex) {
+          correct++;
+        } else {
+          wrongList.push({
+            question: q.question,
+            yourAnswer: q.options[userAnswers[i]]?.text || "Không chọn",
+            correctAnswer: q.options[q.correctIndex].text
+          });
+        }
+      });
+
+      const score = ((correct / total) * 10).toFixed(2);
+      let html = `<h3>Kết quả</h3>
+        <p>Điểm: <strong>${score}/10</strong></p>
+        <p>Đúng: ${correct}/${total}</p>
+        <p>Sai: ${wrongList.length}</p>`;
+
+      if (wrongList.length > 0) {
+        html += `<h4>Câu sai:</h4><ul>`;
+        wrongList.forEach(w => {
+          html += `<li>
+            <strong>${w.question}</strong><br>
+            Bạn chọn: <span class="wrong">${w.yourAnswer}</span><br>
+            Đáp án đúng: <span class="correct">${w.correctAnswer}</span>
+          </li>`;
+        });
+        html += `</ul>`;
+      }
+
+      document.getElementById("result").innerHTML = html;
+      updateProgress();
+    }
+
+    function restartQuiz() {
+      if (confirm("Bạn có chắc chắn muốn làm lại bài?")) {
+        document.getElementById("result").innerHTML = "";
+        document.getElementById("quizContainer").style.display = "block";
+        shuffleArray(rawQuestions);
+        rawQuestions.forEach(q => {
+          shuffleArray(q.options);
+          q.correctIndex = q.options.findIndex(opt => opt.isCorrect);
+        });
+        userAnswers = [];
+        current = 0;
+        showQuestion();
+      }
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+  </script>
+</body>
+</html>
