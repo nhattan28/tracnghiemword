@@ -16,13 +16,11 @@
       animation: gradientFlow 15s ease infinite;
       color: #333;
     }
-
     @keyframes gradientFlow {
       0% {background-position: 0% 50%;}
       50% {background-position: 100% 50%;}
       100% {background-position: 0% 50%;}
     }
-
     .container {
       max-width: 800px;
       margin: auto;
@@ -31,19 +29,16 @@
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
-
     h2 {
       text-align: center;
       color: #2c3e50;
     }
-
     .note {
       background-color: #fff8c6;
       padding: 10px;
       border-left: 4px solid #f1c40f;
       margin-bottom: 20px;
     }
-
     .question-block {
       display: none;
       border-radius: 12px;
@@ -53,13 +48,11 @@
       padding: 20px;
       box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
-
     @keyframes glow {
       0% {background-position: 0% 50%;}
       50% {background-position: 100% 50%;}
       100% {background-position: 0% 50%;}
     }
-
     button {
       background-color: #ff7675;
       color: white;
@@ -69,11 +62,9 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #d63031;
     }
-
     #optionsContainer label {
       display: block;
       margin-bottom: 10px;
@@ -83,11 +74,9 @@
       cursor: pointer;
       border: 1px solid #ccc;
     }
-
     input[type="file"] {
       margin: 10px 0;
     }
-
     .result {
       margin-top: 30px;
       background: #dff9fb;
@@ -95,10 +84,8 @@
       border-radius: 10px;
       border-left: 5px solid #00cec9;
     }
-
     .correct { color: #27ae60; }
     .wrong { color: #e74c3c; }
-
     canvas#confetti {
       position: fixed;
       top: 0;
@@ -108,7 +95,6 @@
       height: 100vh;
       z-index: 9999;
     }
-
     .popup {
       display: none;
       position: fixed;
@@ -122,11 +108,9 @@
       z-index: 99999;
       text-align: center;
     }
-
     .popup button {
       margin: 10px;
     }
-
     .overlay {
       display: none;
       position: fixed;
@@ -135,18 +119,26 @@
       background: rgba(0,0,0,0.3);
       z-index: 99998;
     }
+    #timer {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2d3436;
+    }
   </style>
 </head>
 <body>
   <canvas id="confetti"></canvas>
   <div class="container">
     <h2>🌟 Trắc nghiệm🌟</h2>
-    <div class="note">📌 <strong>Lưu ý:</strong> Đáp án đúng cần in <strong>đậm</strong> trong file Word.</div>
+    <div class="note">📌 <strong>Lưu ý:</strong> Đáp án đúng cần in <strong>đậm</strong> hoặc tô màu vàng trong file Word.</div>
     <input type="file" id="upload" accept=".docx" />
-    <div id="startQuiz" style="display:none;">
+    <div id="startQuiz" style="display:none; text-align:center; margin-top:10px;">
       <button onclick="startQuiz()">🎯 Bắt đầu</button>
     </div>
 
+    <div id="timer"></div>
     <div id="quizContainer" class="question-block">
       <div id="questionText"></div>
       <div id="optionsContainer"></div>
@@ -177,10 +169,8 @@
       "Giữ vững tinh thần nhé! 💖"
     ];
 
-    let rawQuestions = [];
-    let current = 0;
-    let userAnswers = [];
-    let quizStarted = false;
+    let rawQuestions = [], current = 0, userAnswers = [], quizStarted = false;
+    let timerInterval = null, totalSeconds = 0;
     const confetti = new ConfettiGenerator({ target: 'confetti' });
 
     document.getElementById("upload").addEventListener("change", function (event) {
@@ -189,10 +179,17 @@
         mammoth.convertToHtml({ arrayBuffer: reader.result }).then(function (result) {
           const html = result.value;
           parseQuestions(html);
-          document.getElementById("startQuiz").style.display = "block";
+          if (rawQuestions.length > 0) {
+            document.getElementById("startQuiz").style.display = "block";
+            showPopup("📄 File đã tải xong. Nhấn 'Bắt đầu' để làm bài!");
+          } else {
+            showPopup("⚠️ Không tìm thấy câu hỏi hợp lệ.");
+          }
+        }).catch(() => {
+          showPopup("❌ Lỗi đọc file.");
         });
       };
-      reader.readAsArrayBuffer(event.target.files[0]);
+      if (event.target.files.length > 0) reader.readAsArrayBuffer(event.target.files[0]);
     });
 
     function parseQuestions(html) {
@@ -206,7 +203,6 @@
         const text = p.innerText.trim();
         const isBold = p.querySelector("strong");
         const isYellow = p.innerHTML.includes("highlight") || p.innerHTML.includes("background-color:#ffff00");
-
         if (/^\d+\./.test(text)) {
           if (currentQ) rawQuestions.push(currentQ);
           currentQ = { question: text, options: [], correctIndex: null };
@@ -218,7 +214,6 @@
           currentQ.options.push({ text: full, isCorrect: (isBold || isYellow) });
         }
       });
-
       if (currentQ) rawQuestions.push(currentQ);
     }
 
@@ -233,6 +228,8 @@
       document.getElementById("quizContainer").style.display = "block";
       userAnswers = [];
       current = 0;
+      totalSeconds = 0;
+      startTimer();
       showQuestion();
     }
 
@@ -241,65 +238,50 @@
       document.getElementById("questionText").innerHTML = `<h3>${q.question}</h3>`;
       const optContainer = document.getElementById("optionsContainer");
       optContainer.innerHTML = "";
-
       q.options.forEach((opt, idx) => {
         optContainer.innerHTML += `<label><input type="radio" name="option" value="${idx}"> ${opt.text}</label>`;
       });
-
       updateProgress();
     }
 
     function nextQuestion() {
       const selected = document.querySelector('input[name="option"]:checked');
-      if (!selected) {
-        showPopup("Bạn phải chọn một đáp án.");
-        return;
-      }
-
+      if (!selected) return showPopup("Bạn phải chọn một đáp án.");
       userAnswers.push(parseInt(selected.value));
       current++;
-
       if (current < rawQuestions.length) {
         showQuestion();
       } else {
+        stopTimer();
         showResult();
       }
     }
 
     function updateProgress() {
-      const done = current;
-      const total = rawQuestions.length;
-      document.getElementById("progressBar").textContent = `${done} / ${total} câu đã làm`;
+      document.getElementById("progressBar").textContent = `${current} / ${rawQuestions.length} câu đã làm`;
     }
 
     function showResult() {
       quizStarted = false;
       document.getElementById("quizContainer").style.display = "none";
-      const total = rawQuestions.length;
-      let correct = 0;
-      let wrongList = [];
-
+      let correct = 0, wrongList = [];
       rawQuestions.forEach((q, i) => {
-        if (userAnswers[i] === q.correctIndex) {
-          correct++;
-        } else {
-          wrongList.push({
-            question: q.question,
-            yourAnswer: q.options[userAnswers[i]]?.text || "Không chọn",
-            correctAnswer: q.options[q.correctIndex].text
-          });
-        }
+        if (userAnswers[i] === q.correctIndex) correct++;
+        else wrongList.push({
+          question: q.question,
+          yourAnswer: q.options[userAnswers[i]]?.text || "Không chọn",
+          correctAnswer: q.options[q.correctIndex].text
+        });
       });
-
-      const score = ((correct / total) * 10).toFixed(2);
+      let score = ((correct / rawQuestions.length) * 10).toFixed(2);
       let html = `<h3>Kết quả</h3>
         <p>Điểm: <strong>${score}/10</strong></p>
-        <p>Đúng: ${correct}/${total}</p>
-        <p>Sai: ${wrongList.length}</p>`;
-
+        <p>Đúng: ${correct}/${rawQuestions.length}</p>
+        <p>Sai: ${wrongList.length}</p>
+        <p>⏱️ Thời gian làm: ${formatTime(totalSeconds)}</p>`;
       if (wrongList.length > 0) {
-        html += `<p style="color:#e17055;">💌 ${encouragements[Math.floor(Math.random()*encouragements.length)]}</p>`;
-        html += `<h4>Câu sai:</h4><ul>`;
+        html += `<p style="color:#e17055;">💌 ${encouragements[Math.floor(Math.random()*encouragements.length)]}</p>
+          <h4>Câu sai:</h4><ul>`;
         wrongList.forEach(w => {
           html += `<li><strong>${w.question}</strong><br>
             Bạn chọn: <span class="wrong">${w.yourAnswer}</span><br>
@@ -311,7 +293,6 @@
         confetti.render();
         setTimeout(() => confetti.clear(), 5000);
       }
-
       document.getElementById("result").innerHTML = html;
       updateProgress();
     }
@@ -330,7 +311,9 @@
       });
       userAnswers = [];
       current = 0;
+      totalSeconds = 0;
       quizStarted = true;
+      startTimer();
       showQuestion();
     }
 
@@ -341,10 +324,28 @@
       }
     }
 
-    // 🛑 Không cho chuyển tab hoặc thu nhỏ cửa sổ
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        totalSeconds++;
+        document.getElementById("timer").textContent = `⏱️ Thời gian: ${formatTime(totalSeconds)}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById("timer").textContent = '';
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60).toString().padStart(2, '0');
+      const sec = (s % 60).toString().padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
     document.addEventListener("visibilitychange", () => {
       if (quizStarted && document.hidden) {
         quizStarted = false;
+        stopTimer();
         showPopup("Bạn đã chuyển tab hoặc thu nhỏ cửa sổ. Bài làm đã kết thúc.");
         document.getElementById("quizContainer").style.display = "none";
       }
@@ -353,6 +354,7 @@
     window.addEventListener("resize", () => {
       if (quizStarted && window.outerWidth < 800) {
         quizStarted = false;
+        stopTimer();
         showPopup("Bạn đã thu nhỏ cửa sổ. Bài làm đã kết thúc.");
         document.getElementById("quizContainer").style.display = "none";
       }
@@ -372,10 +374,7 @@
       if (confirm) {
         const yesBtn = document.createElement("button");
         yesBtn.textContent = "Có";
-        yesBtn.onclick = () => {
-          closePopup();
-          restartQuiz();
-        };
+        yesBtn.onclick = () => { closePopup(); restartQuiz(); };
         const noBtn = document.createElement("button");
         noBtn.textContent = "Không";
         noBtn.onclick = closePopup;
