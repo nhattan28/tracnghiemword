@@ -204,8 +204,15 @@
     <div id="quizContainer" class="question-block">
       <div id="questionText"></div>
       <div id="optionsContainer"></div>
-      <button onclick="prevQuestion()">⬅️ Quay lại</button>
-      <button onclick="nextQuestion()">➡️ Tiếp</button>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+  <div>
+    <button onclick="prevQuestion()">⬅️ Quay lại</button>
+    <button onclick="nextQuestion()">➡️ Tiếp</button>
+  </div>
+  <button onclick="submitQuiz()">📝 Nộp bài</button>
+</div>
+
+
     </div>
 
     <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">0 / 0 câu đã làm</div>
@@ -531,6 +538,23 @@ document.getElementById("upload").addEventListener("change", function (event) {
     noteSection.style.display = "none"; // Ẩn ghi chú sau khi upload thành công
   }
 });
+function submitQuiz() {
+  const selected = document.querySelector('input[name="option"]:checked');
+  if (!selected && userAnswers.length !== rawQuestions.length) {
+    showPopup("Bạn chưa chọn đáp án cho câu hỏi hiện tại.");
+    return;
+  }
+
+  if (userAnswers.length < rawQuestions.length) {
+    if (selected) userAnswers.push(parseInt(selected.value));
+    for (let i = userAnswers.length; i < rawQuestions.length; i++) {
+      userAnswers.push(null); // Câu chưa làm
+    }
+  }
+
+  stopTimer();
+  showResult();
+}
 
   </script>
 </body>
