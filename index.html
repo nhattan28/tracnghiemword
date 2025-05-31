@@ -209,7 +209,6 @@
     </div>
 
     <div id="progressBar" style="margin-top: 20px; font-weight: bold; text-align: center;">0 / 0 câu đã làm</div>
-    <div class="result" id="result"></div>
     <div style="text-align:center;">
       
 <div class="button-group-wrapper">
@@ -357,45 +356,27 @@
       document.getElementById("progressBar").textContent = `${current} / ${rawQuestions.length} câu đã làm`;
     }
 
-    function showResult() {
-      quizStarted = false;
-      document.getElementById("quizContainer").style.display = "none";
-      let correct = 0, wrongList = [];
-      rawQuestions.forEach((q, i) => {
-        if (userAnswers[i] === q.correctIndex) correct++;
-        else wrongList.push({
-          question: q.question,
-          yourAnswer: q.options[userAnswers[i]]?.text || "Không chọn",
-          correctAnswer: q.options[q.correctIndex].text
-        });
-      });
-      let score = ((correct / rawQuestions.length) * 10).toFixed(2);
-      let html = `<h3>Kết quả</h3>
-        <p>Điểm: <strong>${score}/10</strong></p>
-        <p>Đúng: ${correct}/${rawQuestions.length}</p>
-        <p>Sai: ${wrongList.length}</p>
-        <p>⏱️ Thời gian làm: ${formatTime(totalSeconds)}</p>`;
-      if (wrongList.length > 0) {
-        html += `<p style="color:#e17055;">💌 ${encouragements[Math.floor(Math.random()*encouragements.length)]}</p>
-          <h4>Câu sai:</h4><ul>`;
-        wrongList.forEach(w => {
-          html += `<li><strong>${w.question}</strong><br>
-            Bạn chọn: <span class="wrong">${w.yourAnswer}</span><br>
-            Đáp án đúng: <span class="correct">${w.correctAnswer}</span></li>`;
-        });
-        html += `</ul>`;
-      } else {
-        html += `<p>🎉 Xuất sắc! Bạn đã trả lời đúng tất cả câu hỏi!</p>`;
-        confetti.render();
-        setTimeout(() => confetti.clear(), 5000);
-      }
-      document.getElementById("result").innerHTML = html;
-      updateProgress();
-    }
+  function showResult() {
+  quizStarted = false;
 
-    function confirmRestart() {
-      showPopup("Bạn có chắc muốn làm lại bài?", true);
-    }
+  // Chuyển trang ngay lập tức, không làm gì DOM nữa
+  setTimeout(() => {
+    window.location.href = "ketqua.html";
+  }, 0);
+
+  // Lưu dữ liệu trước khi chuyển (nếu cần)
+  let correct = 0;
+  rawQuestions.forEach((q, i) => {
+    if (userAnswers[i] === q.correctIndex) correct++;
+  });
+
+  localStorage.setItem("quizScore", ((correct / rawQuestions.length) * 10).toFixed(2));
+  localStorage.setItem("quizCorrect", correct);
+  localStorage.setItem("quizTotal", rawQuestions.length);
+  localStorage.setItem("quizTime", formatTime(totalSeconds));
+
+  // KHÔNG cập nhật DOM hoặc hiển thị gì nữa ở đây
+}
 
     function restartQuiz() {
       document.getElementById("result").innerHTML = "";
