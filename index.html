@@ -356,27 +356,25 @@
       document.getElementById("progressBar").textContent = `${current} / ${rawQuestions.length} câu đã làm`;
     }
 
-  function showResult() {
+function showResult() {
   quizStarted = false;
 
-  // Chuyển trang ngay lập tức, không làm gì DOM nữa
-  setTimeout(() => {
-    window.location.href = "ketqua.html";
-  }, 0);
-
-  // Lưu dữ liệu trước khi chuyển (nếu cần)
+  // Tính điểm
   let correct = 0;
   rawQuestions.forEach((q, i) => {
     if (userAnswers[i] === q.correctIndex) correct++;
   });
 
+  // Lưu dữ liệu vào localStorage
   localStorage.setItem("quizScore", ((correct / rawQuestions.length) * 10).toFixed(2));
   localStorage.setItem("quizCorrect", correct);
   localStorage.setItem("quizTotal", rawQuestions.length);
   localStorage.setItem("quizTime", formatTime(totalSeconds));
 
-  // KHÔNG cập nhật DOM hoặc hiển thị gì nữa ở đây
+  // Chuyển trang sang ketqua.html
+  window.location.href = "ketqua.html";
 }
+
 
     function restartQuiz() {
       document.getElementById("result").innerHTML = "";
