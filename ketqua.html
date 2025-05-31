@@ -50,14 +50,29 @@
 <body class="min-h-screen text-gray-900 flex items-center justify-center py-10">
   <div class="p-6 md:p-10 rounded-2xl shadow-xl w-[90%] max-w-4xl relative z-10">
     <h1 class="text-3xl font-bold mb-4 text-center text-purple-700">Kết Quả Bài Làm</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg mb-6">
-      <div><strong>Điểm:</strong> <span id="score"></span></div>
-      <div><strong>Thời gian làm:</strong> <span id="time"></span></div>
-      <div><strong>Số câu đúng:</strong> <span id="correct"></span></div>
-      <div><strong>Số câu sai:</strong> <span id="wrong"></span></div>
-      <div><strong>Tổng số câu:</strong> <span id="total"></span></div>
-      
-    </div>
+
+<div class="overflow-x-auto mb-6">
+  <table class="w-full text-center border-collapse text-lg bg-transparent backdrop-blur-sm shadow-lg rounded-xl overflow-hidden">
+    <thead class="text-gray-900 font-semibold">
+      <tr class="border border-white/50 bg-white/20 rounded-t-xl">
+        <th class="border border-white/50 px-4 py-2">Điểm</th>
+        <th class="border border-white/50 px-4 py-2">Thời gian làm</th>
+        <th class="border border-white/50 px-4 py-2">Số câu đúng</th>
+        <th class="border border-white/50 px-4 py-2">Số câu sai</th>
+        <th class="border border-white/50 px-4 py-2">Tổng số câu</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border border-white/50 bg-white/10 rounded-b-xl text-gray-800 font-medium">
+        <td class="border border-white/50 px-4 py-2" id="score"></td>
+        <td class="border border-white/50 px-4 py-2" id="time"></td>
+        <td class="border border-white/50 px-4 py-2" id="correct"></td>
+        <td class="border border-white/50 px-4 py-2" id="wrong"></td>
+        <td class="border border-white/50 px-4 py-2" id="total"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
     <div id="wrongAnswersSection" class="mt-6">
 <h2 class="text-2xl font-semibold text-red-600 mb-4 text-center">Câu trả lời sai</h2>
