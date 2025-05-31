@@ -1,114 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kết quả</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #a8edea, #fed6e3);
-      background-size: 400% 400%;
-      animation: gradientFlow 15s ease infinite;
-      color: #2d3436;
-    }
-    @keyframes gradientFlow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .container {
-      width: 90%;
-      max-width: 1000px;
-      margin: 20px auto;
-      padding: 24px;
-      background-color: rgba(255,255,255,0.95);
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    .summary {
-      background: #dff9fb;
-      padding: 15px;
-      border-left: 5px solid #00cec9;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    .wrong-answer {
-      margin-bottom: 20px;
-      background: #ffeaa7;
-      padding: 15px;
-      border-left: 5px solid #e17055;
-      border-radius: 10px;
-    }
-    .wrong-answer p {
-      margin: 6px 0;
-    }
-    .label {
-      font-weight: bold;
-    }
-    .back-button {
-      display: block;
-      text-align: center;
-      margin-top: 30px;
-    }
-    .back-button button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #ff7675;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-    }
-    .back-button button:hover {
-      background-color: #d63031;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kết quả bài kiểm tra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
-<body>
-  <div class="container">
-    <h2>📊 Kết quả làm bài</h2>
-    <div class="summary" id="summary"></div>
-    <div id="wrongAnswers"></div>
-    <div class="back-button">
-      <button onclick="window.location.href='index.html'">🔁 Làm lại bài khác</button>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4 max-w-5xl bg-white rounded-lg shadow mt-6">
+    <h1 class="text-3xl font-bold text-center mb-6 text-blue-700">Kết quả bài kiểm tra</h1>
+
+    <div class="text-center text-xl mb-4">
+      <p>🎯 Điểm: <span class="font-bold text-green-600" id="score">0</span></p>
+      <p>✅ Đúng: <span id="correct" class="text-green-600 font-semibold">0</span> / <span id="total">0</span></p>
+      <p>⏱️ Thời gian làm bài: <span id="time" class="text-blue-600"></span></p>
+    </div>
+
+    <div id="detailed-results">
+      <h2 class="text-2xl font-bold mb-4 text-red-600">❌ Các câu trả lời sai:</h2>
+      <!-- Các câu sai sẽ hiển thị ở đây -->
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="index.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Làm lại bài kiểm tra</a>
     </div>
   </div>
 
+  <!-- Pháo hoa -->
+  <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
+
   <script>
-    const score = localStorage.getItem("quizScore");
-    const correct = localStorage.getItem("quizCorrect");
-    const total = localStorage.getItem("quizTotal");
-    const time = localStorage.getItem("quizTime");
+    const score = localStorage.getItem("quizScore") || "0.00";
+    const correct = parseInt(localStorage.getItem("quizCorrect")) || 0;
+    const total = parseInt(localStorage.getItem("quizTotal")) || 0;
+    const time = localStorage.getItem("quizTime") || "00:00";
+    const wrongAnswers = JSON.parse(localStorage.getItem("quizWrongAnswers")) || [];
 
-    const summary = document.getElementById("summary");
-    summary.innerHTML = `
-      ✅ <strong>Điểm:</strong> ${score} / 10<br>
-      ✔️ <strong>Số câu đúng:</strong> ${correct}/${total}<br>
-      ⏱️ <strong>Thời gian làm bài:</strong> ${time}
-    `;
+    document.getElementById("score").textContent = score;
+    document.getElementById("correct").textContent = correct;
+    document.getElementById("total").textContent = total;
+    document.getElementById("time").textContent = time;
 
-    const wrongAnswers = JSON.parse(localStorage.getItem("quizWrongAnswers") || "[]");
-    const wrongContainer = document.getElementById("wrongAnswers");
+    const adviceList = [
+      "Ôn lại khái niệm cơ bản của chương này.",
+      "Xem kỹ phần lý thuyết liên quan đến câu hỏi.",
+      "Chú ý các từ khóa chính trong câu hỏi.",
+      "Đọc kỹ đề và các lựa chọn trước khi chọn.",
+      "Xem lại ví dụ hoặc bài giảng liên quan.",
+    ];
+
+    const resultContainer = document.getElementById("detailed-results");
 
     if (wrongAnswers.length === 0) {
-      wrongContainer.innerHTML = "<p style='text-align:center; font-weight:bold;'>🎉 Chúc mừng bạn đã làm đúng tất cả câu hỏi!</p>";
+      resultContainer.innerHTML = `<p class="text-green-700 text-center text-lg font-semibold mt-4">🎉 Bạn đã trả lời đúng tất cả các câu hỏi!</p>`;
     } else {
-      wrongAnswers.forEach((item, i) => {
-        wrongContainer.innerHTML += `
-          <div class="wrong-answer">
-            <p><span class="label">Câu ${i + 1}:</span> ${item.question}</p>
-            <p><span class="label">Đáp án bạn chọn:</span> <span style="color: red;">${item.selected}</span></p>
-            <p><span class="label">Đáp án đúng:</span> <span style="color: green;">${item.correct}</span></p>
-          </div>
+      wrongAnswers.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "border border-red-200 p-4 rounded mb-4 bg-red-50";
+        card.innerHTML = `
+          <h3 class="font-semibold text-lg mb-2">${index + 1}. ${item.question}</h3>
+          <p>✅ Đáp án đúng: <span class="text-green-600 font-semibold">${item.correct}</span></p>
+          <p>❌ Bạn chọn: <span class="text-red-600 font-semibold">${item.selected || "Không chọn"}</span></p>
+          <p class="italic mt-2 text-yellow-700">👉 Lời khuyên: ${adviceList[index % adviceList.length]}</p>
         `;
+        resultContainer.appendChild(card);
       });
+    }
+
+    // 🎉 Hiệu ứng pháo hoa nếu đúng 100%
+    if (correct === total && total > 0) {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
+
+      function shootConfetti() {
+        confetti({
+          particleCount: 80,
+          origin: { x: Math.random(), y: Math.random() * 0.6 },
+          ...defaults
+        });
+        if (Date.now() < animationEnd) {
+          requestAnimationFrame(shootConfetti);
+        }
+      }
+      shootConfetti();
     }
   </script>
 </body>
