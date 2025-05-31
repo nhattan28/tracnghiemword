@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kết Quả Bài Làm</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -51,32 +50,31 @@
   <div class="p-6 md:p-10 rounded-2xl shadow-xl w-[90%] max-w-4xl relative z-10">
     <h1 class="text-3xl font-bold mb-4 text-center text-purple-700">Kết Quả Bài Làm</h1>
 
-<div class="overflow-x-auto mb-6">
-  <table class="w-full text-center border-collapse text-lg bg-transparent backdrop-blur-sm shadow-lg rounded-xl overflow-hidden">
-    <thead class="text-gray-900 font-semibold">
-      <tr class="border border-white/50 bg-white/20 rounded-t-xl">
-        <th class="border border-white/50 px-4 py-2">Thời gian làm</th>
-                <th class="border border-white/50 px-4 py-2">Điểm</th>
-        <th class="border border-white/50 px-4 py-2">Số câu đúng</th>
-        <th class="border border-white/50 px-4 py-2">Số câu sai</th>
-        <th class="border border-white/50 px-4 py-2">Tổng số câu</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="border border-white/50 bg-white/10 rounded-b-xl text-gray-800 font-medium">
-
-        <td class="border border-white/50 px-4 py-2" id="time"></td>
-                <td class="border border-white/50 px-4 py-2" id="score"></td>
-        <td class="border border-white/50 px-4 py-2" id="correct"></td>
-        <td class="border border-white/50 px-4 py-2" id="wrong"></td>
-        <td class="border border-white/50 px-4 py-2" id="total"></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+    <div class="overflow-x-auto mb-6">
+      <table class="w-full text-center border-collapse text-lg bg-transparent backdrop-blur-sm shadow-lg rounded-xl overflow-hidden">
+        <thead class="text-gray-900 font-semibold">
+          <tr class="border border-white/50 bg-white/20 rounded-t-xl">
+            <th class="border border-white/50 px-4 py-2">Thời gian làm</th>
+            <th class="border border-white/50 px-4 py-2">Điểm</th>
+            <th class="border border-white/50 px-4 py-2">Số câu đúng</th>
+            <th class="border border-white/50 px-4 py-2">Số câu sai</th>
+            <th class="border border-white/50 px-4 py-2">Tổng số câu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border border-white/50 bg-white/10 rounded-b-xl text-gray-800 font-medium">
+            <td class="border border-white/50 px-4 py-2" id="time"></td>
+            <td class="border border-white/50 px-4 py-2" id="score"></td>
+            <td class="border border-white/50 px-4 py-2" id="correct"></td>
+            <td class="border border-white/50 px-4 py-2" id="wrong"></td>
+            <td class="border border-white/50 px-4 py-2" id="total"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div id="wrongAnswersSection" class="mt-6">
-<h2 class="text-2xl font-semibold text-red-600 mb-4 text-center">Câu trả lời sai</h2>
+      <h2 class="text-2xl font-semibold text-red-600 mb-4 text-center">Câu trả lời sai</h2>
       <div id="wrongAnswersContainer" class="space-y-6"></div>
     </div>
 
@@ -87,7 +85,7 @@
     <div id="motivationalMessage" class="hidden text-center text-purple-700 text-lg font-medium mt-6"></div>
 
     <div class="mt-8 text-center">
-      <a href="index.html" class="inline-block bg-red-50 hover:bg-red-50-400 text-black font-bold py-2 px-6 rounded-xl shadow">Làm lại</a>
+      <a href="index.html" class="inline-block bg-red-50 hover:bg-red-100 text-black font-bold py-2 px-6 rounded-xl shadow">Làm lại</a>
     </div>
   </div>
 
@@ -97,13 +95,13 @@
     const total = localStorage.getItem("quizTotal");
     const time = localStorage.getItem("quizTime");
     const wrongAnswers = JSON.parse(localStorage.getItem("quizWrongAnswers") || "[]");
+    const scale = localStorage.getItem("quizScale") || 10;
 
-    document.getElementById("score").textContent = score;
+    document.getElementById("score").textContent = `${score}/${scale}`;
     document.getElementById("correct").textContent = correct;
     document.getElementById("total").textContent = total;
     document.getElementById("time").textContent = time;
     document.getElementById("wrong").textContent = total - correct;
-
 
     const wrongContainer = document.getElementById("wrongAnswersContainer");
     const section = document.getElementById("wrongAnswersSection");
@@ -117,15 +115,15 @@
       section.classList.remove("hidden");
       motivationalMessage.classList.remove("hidden");
 
-      const wrongCount = wrongAnswers.length;
+      const scorePercentage = (parseFloat(score) / parseFloat(scale)) * 100;
       let message = "";
 
-      if (wrongCount <= 2) {
-        message = "👏 Rất tốt! Chỉ còn một chút nữa là hoàn hảo!";
-      } else if (wrongCount <= 5) {
-        message = "👍 Khá ổn! Hãy xem lại vài câu để hiểu rõ hơn nhé!";
-      } else if (wrongCount <= 10) {
-        message = "💪 Đừng bỏ cuộc! Cố gắng thêm một chút nữa là được!";
+      if (scorePercentage >= 90) {
+        message = "👏 Xuất sắc! Bạn gần như hoàn hảo!";
+      } else if (scorePercentage >= 70) {
+        message = "👍 Rất tốt! Hãy xem lại vài câu để cải thiện nhé!";
+      } else if (scorePercentage >= 50) {
+        message = "💪 Khá ổn! Cố gắng thêm một chút nữa!";
       } else {
         message = "🚀 Đừng nản! Ôn tập lại, lần sau bạn sẽ làm tốt hơn!";
       }
@@ -136,7 +134,7 @@
         const div = document.createElement("div");
         div.className = "p-4 rounded-xl bg-red-50 border border-red-200";
         div.innerHTML = `
-          <p class="mb-2"><strong> </strong> ${item.question}</p>
+          <p class="mb-2"><strong>Câu ${index + 1}:</strong> ${item.question}</p>
           <p class="text-blue-700"><strong>Đáp án bạn chọn:</strong> ${item.selected}</p>
           <p class="text-green-700"><strong>Đáp án đúng:</strong> ${item.correct}</p>
         `;
