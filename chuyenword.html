@@ -75,7 +75,7 @@
     }
   </style>
 
-  <!-- THƯ VIỆN DOCX -->
+  <!-- Thêm thư viện docx để tạo file .docx -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.7.0/docx.umd.min.js"></script>
 </head>
 <body>
@@ -107,7 +107,8 @@
 
       const { Document, Packer, Paragraph, TextRun } = window.docx;
 
-      const paragraphs = rawText.split(/\n+/).map(line =>
+      const lines = rawText.split(/\n+/);
+      const paragraphs = lines.map(line =>
         new Paragraph({
           children: [new TextRun(line)],
         })
@@ -115,18 +116,15 @@
 
       const doc = new Document({
         sections: [{
-          properties: {},
           children: paragraphs
         }]
       });
 
-      // Tạo blob chuẩn .docx
       const blob = await Packer.toBlob(doc);
-      const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
-      link.href = url;
-      link.download = filename + ".docx"; // Quan trọng: phần mở rộng là .docx
+      link.href = URL.createObjectURL(blob);
+      link.download = filename + ".docx"; // Chắc chắn là .docx
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
