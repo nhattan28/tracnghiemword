@@ -1,124 +1,52 @@
+<!-- ketqua.html -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Kết quả</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #a8edea, #fed6e3);
-      background-size: 400% 400%;
-      animation: gradientFlow 15s ease infinite;
-      color: #333;
-    }
-    @keyframes gradientFlow {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
-    .container {
-      width: 94vw;
-      margin: 10px 20px;
-      padding: 24px 20px;
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      max-width: 800px;
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        width: 95%;
-        max-width: 90%;
-        margin: 0 auto;
-        padding: 12px;
-      }
-    }
-
-    h2 {
       text-align: center;
-      color: #2c3e50;
+      background-color: #f1f2f6;
+      padding-top: 50px;
     }
-
-    .correct {
+    .result-box {
+      display: inline-block;
+      padding: 30px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .score {
+      font-size: 48px;
+      font-weight: bold;
       color: #27ae60;
     }
-
-    .wrong {
-      color: #e74c3c;
-    }
-
-    .button-group-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-top: 30px;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .button-row button {
-      background-color: #ff7675;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .button-row button:hover {
-      background-color: #d63031;
-    }
-
-    @media (min-width: 768px) {
-      .button-group-wrapper {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      .button-group-wrapper .button-row {
-        flex-direction: row;
-      }
-
-      .button-group-wrapper .button-row button {
-        width: auto;
-      }
+    .summary {
+      font-size: 20px;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Kết quả bài làm</h2>
-    <div id="resultContent">Đang tải...</div>
-
-    <div class="button-group-wrapper">
-      <div class="button-row">
-        <button onclick="location.href='index.html'">🏠 Trang chủ</button>
-        <button onclick="restartQuiz()">🔁 Làm lại</button>
-      </div>
-    </div>
+  <div class="result-box">
+    <h2>🎉 Kết quả bài làm 🎉</h2>
+    <div class="score" id="score">0</div>
+    <div class="summary" id="summary"></div>
+    <div class="summary" id="time"></div>
+    <button onclick="window.location.href='index.html'">🔄 Làm lại</button>
   </div>
 
   <script>
-    const resultHTML = sessionStorage.getItem("quizResult");
-    document.getElementById("resultContent").innerHTML = resultHTML || "Không tìm thấy kết quả.";
+    const score = localStorage.getItem("quizScore");
+    const correct = localStorage.getItem("quizCorrect");
+    const total = localStorage.getItem("quizTotal");
+    const time = localStorage.getItem("quizTime");
 
-    function restartQuiz() {
-      sessionStorage.clear(); // Xóa dữ liệu cũ
-      location.href = "index.html"; // Quay lại trang làm bài
-    }
+    document.getElementById("score").textContent = `${score} điểm`;
+    document.getElementById("summary").textContent = `Bạn đúng ${correct} / ${total} câu.`;
+    document.getElementById("time").textContent = `Thời gian làm bài: ${time}`;
   </script>
 </body>
 </html>
