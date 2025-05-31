@@ -380,9 +380,6 @@ function showResult() {
 
   window.location.href = "ketqua.html";
 }
-
-
-
     function restartQuiz() {
       document.getElementById("result").innerHTML = "";
       document.getElementById("quizContainer").style.display = "block";
@@ -486,21 +483,47 @@ function showResult() {
     }
 
     // Hàm xóa file
-    function clearFile() {
-      const fileInput = document.getElementById("upload");
-      fileInput.value = ''; // Xóa file đã chọn
-      document.getElementById("startQuiz").style.display = "none"; // Ẩn nút "Bắt đầu"
-      document.getElementById("quizContainer").style.display = "none"; // Ẩn khung câu hỏi
-      document.getElementById("result").innerHTML = ""; // Xóa kết quả
-      document.getElementById("progressBar").textContent = "0 / 0 câu đã làm"; // Reset tiến độ
-      document.getElementById("clearFileBtn").style.display = "none"; // Ẩn nút "Xóa file"
-      document.getElementById("noteSection").style.display = "block";
+function clearFile() {
+  // Reset các biến và UI
+  document.getElementById("upload").value = ""; // reset input file
+  rawQuestions = [];
+  userAnswers = [];
+  current = 0;
 
-      rawQuestions = []; // Xóa danh sách câu hỏi
-      userAnswers = []; // Xóa đáp án người dùng
-      current = 0; // Reset chỉ số câu hỏi
-      stopTimer(); // Dừng timer
-    }
+  document.getElementById("startQuiz").style.display = "none";
+  document.getElementById("quizContainer").style.display = "none";
+  document.getElementById("progressBar").textContent = "0 / 0 câu đã làm";
+  document.getElementById("timer").textContent = '';
+  stopTimer();
+
+  // Hiện lại phần upload và note
+  document.getElementById("upload").style.display = "block";
+  document.getElementById("noteSection").style.display = "block";
+  document.getElementById("clearFileBtn").style.display = "none";
+}
+
+// Sau khi đọc xong file thì ẩn phần tải file và ghi chú:
+document.getElementById("upload").addEventListener("change", function (event) {
+  const reader = new FileReader();
+  reader.onload = function () {
+    mammoth.convertToHtml({ arrayBuffer: reader.result }).then(function (result) {
+      const html = result.value;
+      parseQuestions(html);
+      if (rawQuestions.length > 0) {
+        document.getElementById("startQuiz").style.display = "block";
+        document.getElementById("clearFileBtn").style.display = "inline-block";
+        document.getElementById("upload").style.display = "none"; // Ẩn upload
+        document.getElementById("noteSection").style.display = "none"; // Ẩn ghi chú
+        showPopup("Nhấn 'Bắt đầu' để làm bài!..."); // giữ popup cũ
+      } else {
+        showPopup("⚠️ Không tìm thấy câu hỏi hợp lệ.");
+      }
+    }).catch(() => {
+      showPopup("❌ Lỗi đọc file.");
+    });
+  };
+  if (event.target.files.length > 0) reader.readAsArrayBuffer(event.target.files[0]);
+});
     
     document.getElementById("upload").addEventListener("change", function () {
   const noteSection = document.getElementById("noteSection");
@@ -510,6 +533,5 @@ function showResult() {
 });
 
   </script>
-  
 </body>
 </html>
