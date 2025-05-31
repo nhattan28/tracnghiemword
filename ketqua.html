@@ -54,7 +54,9 @@
       <div><strong>Điểm:</strong> <span id="score"></span></div>
       <div><strong>Thời gian làm:</strong> <span id="time"></span></div>
       <div><strong>Số câu đúng:</strong> <span id="correct"></span></div>
+      <div><strong>Số câu sai:</strong> <span id="wrong"></span></div>
       <div><strong>Tổng số câu:</strong> <span id="total"></span></div>
+      
     </div>
 
     <div id="wrongAnswersSection" class="mt-6">
@@ -84,6 +86,8 @@
     document.getElementById("correct").textContent = correct;
     document.getElementById("total").textContent = total;
     document.getElementById("time").textContent = time;
+    document.getElementById("wrong").textContent = total - correct;
+
 
     const wrongContainer = document.getElementById("wrongAnswersContainer");
     const section = document.getElementById("wrongAnswersSection");
