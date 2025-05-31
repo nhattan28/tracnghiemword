@@ -43,6 +43,31 @@
         transform: scale(4) translateY(-150px);
       }
     }
+
+    .scroll-buttons {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10000;
+    }
+
+    .scroll-buttons button {
+      
+      color: white;
+      padding: 10px 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .scroll-buttons button:hover {
+      background-color: #9333ea;
+    }
   </style>
 </head>
 
@@ -87,6 +112,11 @@
     <div class="mt-8 text-center">
       <a href="index.html" class="inline-block bg-red-50 hover:bg-red-100 text-black font-bold py-2 px-6 rounded-xl shadow">Làm lại</a>
     </div>
+  </div>
+
+  <div class="scroll-buttons">
+    <button onclick="scrollToTop()">⬆️</button>
+    <button onclick="scrollToBottom()">⬇️</button>
   </div>
 
   <script>
@@ -156,6 +186,20 @@
       f.style.background = `hsl(${Math.random() * 360}, 100%, 60%)`;
       document.body.appendChild(f);
       setTimeout(() => f.remove(), 1000);
+    }
+
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    function scrollToBottom() {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   </script>
 </body>
