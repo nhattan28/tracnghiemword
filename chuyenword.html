@@ -75,7 +75,7 @@
     }
   </style>
 
-  <!-- Thư viện tạo file .docx -->
+  <!-- THƯ VIỆN DOCX -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.7.0/docx.umd.min.js"></script>
 </head>
 <body>
@@ -120,11 +120,13 @@
         }]
       });
 
+      // Tạo blob chuẩn .docx
       const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename + ".docx";
+      link.href = url;
+      link.download = filename + ".docx"; // Quan trọng: phần mở rộng là .docx
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
