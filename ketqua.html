@@ -1,39 +1,114 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Kết quả</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kết quả bài làm</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      background-color: #f1f2f6;
-      padding-top: 50px;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      background-size: 400% 400%;
+      animation: gradientFlow 15s ease infinite;
+      color: #333;
     }
-    .result-box {
-      display: inline-block;
-      padding: 30px;
-      background: #ffffff;
+
+    @keyframes gradientFlow {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    .container {
+      max-width: 90%;
+      margin: 30px auto;
+      padding: 24px;
+      background-color: rgba(255,255,255,0.95);
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
     .score {
-      font-size: 48px;
+      font-size: 36px;
       font-weight: bold;
       color: #27ae60;
+      text-align: center;
+      margin-bottom: 10px;
     }
+
     .summary {
-      font-size: 20px;
-      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .wrong-question {
+      background-color: #ffe6e6;
+      border-left: 6px solid #e74c3c;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+
+    .wrong-question h4 {
+      margin: 0 0 8px 0;
+      color: #c0392b;
+    }
+
+    .answer {
+      margin-left: 12px;
+      font-size: 16px;
+    }
+
+    .selected {
+      color: #e67e22;
+    }
+
+    .correct {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    button {
+      display: block;
+      margin: 30px auto 10px;
+      padding: 12px 24px;
+      background-color: #ff7675;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #d63031;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+        max-width: 95%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="result-box">
+  <div class="container">
     <h2>🎉 Kết quả bài làm 🎉</h2>
     <div class="score" id="score">0</div>
     <div class="summary" id="summary"></div>
     <div class="summary" id="time"></div>
+
+    <div id="wrongAnswersContainer"></div>
+
     <button onclick="window.location.href='index.html'">🔄 Làm lại</button>
   </div>
 
@@ -42,10 +117,24 @@
     const correct = localStorage.getItem("quizCorrect");
     const total = localStorage.getItem("quizTotal");
     const time = localStorage.getItem("quizTime");
+    const wrongAnswers = JSON.parse(localStorage.getItem("quizWrongAnswers") || "[]");
 
     document.getElementById("score").textContent = `${score} điểm`;
     document.getElementById("summary").textContent = `Bạn đúng ${correct} / ${total} câu.`;
-    document.getElementById("time").textContent = `Thời gian làm bài: ${time}`;
+    document.getElementById("time").textContent = `⏱️ Thời gian làm bài: ${time}`;
+
+    const container = document.getElementById("wrongAnswersContainer");
+
+    wrongAnswers.forEach((item, index) => {
+      const block = document.createElement("div");
+      block.className = "wrong-question";
+      block.innerHTML = `
+        <h4>Câu ${index + 1}: ${item.question}</h4>
+        <div class="answer"><span class="selected">🟥 Đáp án bạn chọn:</span> ${item.selected}</div>
+        <div class="answer"><span class="correct">✅ Đáp án đúng:</span> ${item.correct}</div>
+      `;
+      container.appendChild(block);
+    });
   </script>
 </body>
 </html>
