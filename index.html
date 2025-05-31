@@ -182,21 +182,19 @@
   }
 }
 
-
-
-
   </style>
 </head>
 <body>
   <canvas id="confetti"></canvas>
   <div class="container">
     <h2>🌟 Trắc nghiệm🌟</h2>
-    <div class="note">
-      📌 <strong>Lưu ý:</strong> Đáp án đúng cần <strong>in đậm</strong> trong file Word.<br>
-      Định dạng câu hỏi: <code>1.</code> hoặc <code>1)</code><br>
-      Định dạng câu trả lời: <code>a.</code> hoặc <code>a)</code> hoặc <code>A.</code> hoặc <code>A)</code><br>
-      Hoặc ấn vào "Chuẩn hóa câu hỏi" để làm chuẩn câu hỏi cho trang website
-    </div>
+    <div id="noteSection" class="note">
+  📌 <strong>Lưu ý:</strong> Đáp án đúng cần <strong>in đậm</strong> trong file Word.<br>
+  Định dạng câu hỏi: <code>1.</code> hoặc <code>1)</code><br>
+  Định dạng câu trả lời: <code>a.</code> hoặc <code>a)</code> hoặc <code>A.</code> hoặc <code>A)</code><br>
+  Hoặc ấn vào "Chuẩn hóa câu hỏi" để làm chuẩn câu hỏi cho trang website
+</div>
+
     <input type="file" id="upload" accept=".docx" />
     <div id="startQuiz" style="display:none; text-align:center; margin-top:10px;">
       <button onclick="startQuiz()">🎯 Bắt đầu</button>
@@ -515,6 +513,14 @@
       current = 0; // Reset chỉ số câu hỏi
       stopTimer(); // Dừng timer
     }
+    
+    document.getElementById("upload").addEventListener("change", function () {
+  const noteSection = document.getElementById("noteSection");
+  if (this.files.length > 0) {
+    noteSection.style.display = "none"; // Ẩn ghi chú sau khi upload thành công
+  }
+});
+
   </script>
   
 </body>
